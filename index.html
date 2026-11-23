@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content =
+        localStorage.getItem('color-scheme') ?? 'light dark';
+    } catch {}
+  </script>
+  <title>MPM2D Quadratic Solver — Nelson Principles of Mathematics 10</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathlive@0.101.0/dist/mathlive.min.js"></script>
+  <script defer src="js/bundle.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">x²</div>
+        <div>
+          <h1>MPM2D Quadratic Studio</h1>
+          <p class="brand-sub">Nelson Principles of Mathematics 10 · Adaptive Practice &amp; Graphing</p>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <span class="stat-chip">Streak: <strong id="stat-streak">0</strong></span>
+        <span class="stat-chip">Accuracy: <strong id="stat-accuracy">0%</strong></span>
+        <span class="stat-chip level-chip" id="stat-level-badge" data-level="1">L1: Basic</span>
+        <button type="button" class="btn" id="theme-toggle-btn" aria-label="Toggle color theme">☾ Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="view-tabs" role="tablist" aria-label="App Views">
+      <button type="button" class="tab-btn active" id="tab-practice" role="tab" aria-selected="true" aria-controls="view-practice">Practice</button>
+      <button type="button" class="tab-btn" id="tab-graph" role="tab" aria-selected="false" aria-controls="view-graph">Graph &amp; Inequalities</button>
+      <button type="button" class="tab-btn" id="tab-transform" role="tab" aria-selected="false" aria-controls="view-transform">Transformations</button>
+      <button type="button" class="tab-btn" id="tab-linear" role="tab" aria-selected="false" aria-controls="view-linear">Linear Systems</button>
+      <button type="button" class="tab-btn" id="tab-geo" role="tab" aria-selected="false" aria-controls="view-geo">Analytic Geometry</button>
+      <button type="button" class="tab-btn" id="tab-trig" role="tab" aria-selected="false" aria-controls="view-trig">Trigonometry</button>
+      <button type="button" class="tab-btn" id="tab-mental" role="tab" aria-selected="false" aria-controls="view-mental">Mental Math &amp; Ratios</button>
+      <button type="button" class="tab-btn" id="tab-sim" role="tab" aria-selected="false" aria-controls="view-sim">Simulations</button>
+      <button type="button" class="tab-btn" id="tab-progress" role="tab" aria-selected="false" aria-controls="view-progress">Progress Dashboard</button>
+    </nav>
+
+    <!-- Practice View -->
+    <section id="view-practice" aria-labelledby="tab-practice">
+      <div class="controls-card">
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Skill</span>
+            <div class="segmented" id="skill-segment" role="group" aria-label="Practice Skill">
+              <button type="button" class="seg-btn active" data-skill="solve" aria-pressed="true">Solve Equations</button>
+              <button type="button" class="seg-btn" data-skill="completing_square" aria-pressed="false">Completing the Square</button>
+              <button type="button" class="seg-btn" data-skill="factoring" aria-pressed="false">Factoring</button>
+              <button type="button" class="seg-btn" data-skill="expansion" aria-pressed="false">Expansion</button>
+              <button type="button" class="seg-btn" data-skill="key_features" aria-pressed="false">Axis of Sym. &amp; y-Int</button>
+              <button type="button" class="seg-btn" data-skill="find_equation" aria-pressed="false">Find Equation &amp; Graph</button>
+              <button type="button" class="seg-btn" data-skill="finite_differences" aria-pressed="false">Finite Differences</button>
+              <button type="button" class="seg-btn" data-skill="linear_quadratic" aria-pressed="false">Linear-Quadratic Systems</button>
+              <button type="button" class="seg-btn" data-skill="quad_apps" aria-pressed="false">Applications (Max/Min)</button>
+              <button type="button" class="seg-btn" data-skill="cemc_enrichment" aria-pressed="false">Waterloo CEMC Enrichment</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row hidden" id="factor-technique-row">
+          <div class="control-group">
+            <span class="control-label">Technique</span>
+            <div class="segmented" id="factor-technique-segment" role="group" aria-label="Factoring Technique">
+              <button type="button" class="seg-btn active" data-tech="mixed" aria-pressed="true">Mixed</button>
+              <button type="button" class="seg-btn" data-tech="gcf" aria-pressed="false">Common Factor</button>
+              <button type="button" class="seg-btn" data-tech="grouping" aria-pressed="false">Grouping</button>
+              <button type="button" class="seg-btn" data-tech="special_product" aria-pressed="false">Special Products</button>
+              <button type="button" class="seg-btn" data-tech="decomposition" aria-pressed="false">Decomposition</button>
+              <button type="button" class="seg-btn" data-tech="criss_cross" aria-pressed="false">Criss-Cross (Enrichment)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div class="control-group" id="form-control-group">
+            <span class="control-label">Form</span>
+            <div class="segmented" id="form-segment" role="group" aria-label="Quadratic Form">
+              <button type="button" class="seg-btn active" data-form="mixed" aria-pressed="true">Mixed</button>
+              <button type="button" class="seg-btn" data-form="factored" aria-pressed="false">Factored</button>
+              <button type="button" class="seg-btn" data-form="vertex" aria-pressed="false">Vertex</button>
+              <button type="button" class="seg-btn" data-form="standard" aria-pressed="false">Standard</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <button type="button" class="mode-btn active" id="mode-toggle-btn" aria-pressed="true">
+              <span id="mode-label">Adaptive Auto</span>
+            </button>
+            <div class="adaptive-meter">
+              <span id="adaptive-meter-text">Level-up streak (0/3):</span>
+              <span class="adaptive-dots" id="adaptive-dots"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Level</span>
+            <div class="segmented" id="level-segment" role="group" aria-label="Difficulty Level">
+              <button type="button" class="seg-btn active" data-level="1" aria-pressed="true">1 · Basic</button>
+              <button type="button" class="seg-btn" data-level="2" aria-pressed="false">2 · Core</button>
+              <button type="button" class="seg-btn" data-level="3" aria-pressed="false">3 · Challenging</button>
+              <button type="button" class="seg-btn" data-level="4" aria-pressed="false">4 · Enrichment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <article class="problem-card">
+        <div class="problem-meta">
+          <span class="badge" id="problem-form-badge" data-form="factored">Factored Form</span>
+          <span class="badge" id="problem-level-badge" data-level="1">Level 1: Basic</span>
+          <button type="button" class="btn btn-sm hidden" id="practice-graph-btn" aria-expanded="false">Show Graph</button>
+          <span class="nelson-ref" id="problem-nelson-ref">Nelson MPM2D</span>
+        </div>
+
+        <p class="problem-prompt" id="problem-prompt">Solve for x:</p>
+        <div class="equation-box" id="problem-equation" aria-live="polite"></div>
+
+        <div class="practice-graph-panel hidden" id="practice-graph-panel">
+          <canvas id="practice-canvas" width="560" height="320" aria-label="Graphical representation of the quadratic"></canvas>
+          <p class="graph-legend" id="practice-graph-legend">Blue: Parabola · Green: Roots (x-intercepts) · Purple: Vertex &amp; Axis of Symmetry · Cyan: y-intercept</p>
+        </div>
+
+        <div class="input-section">
+          <div id="math-input-group">
+            <div class="input-row">
+              <div class="math-field-wrap">
+                <math-field id="math-input" virtual-keyboard-mode="manual" aria-label="Enter mathematical answer"></math-field>
+                <input type="text" id="math-input-fallback" class="math-fallback hidden" placeholder="Enter answer e.g. -3, 5 or (x-2)^2 - 4" aria-label="Enter mathematical answer">
+              </div>
+              <button type="button" class="btn btn-toggle" id="no-real-btn" aria-pressed="false">No Real Roots</button>
+            </div>
+
+            <div class="toolbar-row">
+              <div class="math-toolbar" id="math-toolbar" role="group" aria-label="Quick math symbols">
+                <button type="button" class="tool-key" data-latex="x" data-plain="x" title="Variable x">x</button>
+                <button type="button" class="tool-key" data-latex="^2" data-plain="^2" title="Squared">x²</button>
+                <button type="button" class="tool-key" data-latex="(" data-plain="(" title="Left parenthesis">(</button>
+                <button type="button" class="tool-key" data-latex=")" data-plain=")" title="Right parenthesis">)</button>
+                <button type="button" class="tool-key" data-latex="\pm" data-plain="±" title="Plus or minus">±</button>
+                <button type="button" class="tool-key" data-latex="\sqrt{#0}" data-plain="sqrt()" title="Square root">√</button>
+                <button type="button" class="tool-key" data-latex="\frac{#0}{#?}" data-plain="/" title="Fraction">a/b</button>
+                <button type="button" class="tool-key" data-latex="," data-plain=", " title="Separate multiple roots">,</button>
+                <button type="button" class="tool-key" data-latex="-" data-plain="-" title="Minus sign">−</button>
+              </div>
+              <span class="brand-sub" id="input-tip">Separate multiple roots with a comma (e.g. -2, 5 or 3 ± √5)</span>
+            </div>
+          </div>
+
+          <div id="choice-input-group" class="choice-group hidden" role="group" aria-label="Number of points of intersection">
+            <button type="button" class="btn choice-btn" data-choice="0">0 Intersections</button>
+            <button type="button" class="btn choice-btn" data-choice="1">1 Intersection (Tangent)</button>
+            <button type="button" class="btn choice-btn" data-choice="2">2 Intersections</button>
+          </div>
+
+          <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="check-btn">Check Answer</button>
+            <button type="button" class="btn" id="hint-btn">Hint (0/2)</button>
+            <button type="button" class="btn" id="solution-btn">Show Solution</button>
+            <button type="button" class="btn btn-next" id="next-btn">Next Question →</button>
+          </div>
+        </div>
+
+        <div class="feedback-banner hidden" id="feedback-banner" role="status" aria-live="polite"></div>
+        <div class="adaptive-toast hidden" id="adaptive-toast" role="status" aria-live="polite"></div>
+        <div class="hints-container hidden" id="hints-container"></div>
+
+        <div class="solution-container hidden" id="solution-container">
+          <h3>Step-by-Step Solution (Nelson MPM2D)</h3>
+          <ol class="solution-steps" id="solution-steps"></ol>
+        </div>
+      </article>
+    </section>
+
+    <!-- Graph & Inequalities Lab View -->
+    <section id="view-graph" class="hidden" aria-labelledby="tab-graph">
+      <div class="lab-layout">
+        <div class="lab-controls-card">
+          <div class="dashboard-card-head">
+            <h2>Graphical Method &amp; Inequalities</h2>
+            <button type="button" class="btn btn-sm" id="lab-random-btn">Randomize</button>
+          </div>
+          <p class="brand-sub">Explore how the parabola's x-intercepts and opening direction solve equations and quadratic inequalities.</p>
+
+          <div class="slider-group">
+            <label for="lab-a-num">Coefficient <strong>a</strong> (opening)</label>
+            <div class="slider-row">
+              <input type="range" id="lab-a-range" min="-4" max="4" step="0.5" value="1">
+              <input type="number" id="lab-a-num" min="-10" max="10" step="0.5" value="1">
+            </div>
+          </div>
+
+          <div class="slider-group">
+            <label for="lab-b-num">Coefficient <strong>b</strong> (linear)</label>
+            <div class="slider-row">
+              <input type="range" id="lab-b-range" min="-12" max="12" step="1" value="-2">
+              <input type="number" id="lab-b-num" min="-30" max="30" step="1" value="-2">
+            </div>
+          </div>
+
+          <div class="slider-group">
+            <label for="lab-c-num">Constant <strong>c</strong> (y-intercept)</label>
+            <div class="slider-row">
+              <input type="range" id="lab-c-range" min="-15" max="15" step="1" value="-3">
+              <input type="number" id="lab-c-num" min="-50" max="50" step="1" value="-3">
+            </div>
+          </div>
+
+          <div class="slider-group">
+            <span class="control-label">Relation to 0</span>
+            <div class="segmented" id="lab-op-segment" role="group" aria-label="Inequality Operator">
+              <button type="button" class="seg-btn active" data-op="=" aria-pressed="true">= 0</button>
+              <button type="button" class="seg-btn" data-op=">" aria-pressed="false">&gt; 0</button>
+              <button type="button" class="seg-btn" data-op=">=" aria-pressed="false">≥ 0</button>
+              <button type="button" class="seg-btn" data-op="<" aria-pressed="false">&lt; 0</button>
+              <button type="button" class="seg-btn" data-op="<=" aria-pressed="false">≤ 0</button>
+            </div>
+          </div>
+
+          <div class="lab-readout">
+            <div class="readout-item">
+              <span class="readout-label">Expression</span>
+              <div id="lab-expr-tex"></div>
+            </div>
+            <div class="readout-item">
+              <span class="readout-label">Solution Set</span>
+              <div id="lab-solution-tex" class="solution-highlight"></div>
+            </div>
+            <div class="readout-meta-grid">
+              <div><span class="readout-label">Vertex</span><div id="lab-vertex"></div></div>
+              <div><span class="readout-label">Axis of Sym.</span><div id="lab-axis"></div></div>
+              <div><span class="readout-label">y-Intercept</span><div id="lab-yint"></div></div>
+              <div><span class="readout-label">Roots</span><div id="lab-roots"></div></div>
+            </div>
+            <p class="lab-explain" id="lab-explain"></p>
+          </div>
+        </div>
+
+        <div class="lab-canvas-card">
+          <canvas id="lab-canvas" width="600" height="420" aria-label="Interactive quadratic equation and inequality graph"></canvas>
+          <p class="graph-legend">Green shaded regions &amp; bold x-axis bar show where the inequality is true (○ = excluded, ● = included).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transformations & Mapping Rule View -->
+    <section id="view-transform" class="hidden" aria-labelledby="tab-transform">
+      <div class="controls-card">
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Level</span>
+            <div class="segmented" id="tr-tier-segment" role="group" aria-label="Transformation Level">
+              <button type="button" class="seg-btn active" data-tier="basic" aria-pressed="true">Basic (y = x² → a(x−h)²+k)</button>
+              <button type="button" class="seg-btn" data-tier="challenging" aria-pressed="false">Challenging (Parabola → Parabola)</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <button type="button" class="btn btn-primary btn-sm" id="tr-random-btn">Randomize Problem</button>
+          </div>
+        </div>
+
+        <div class="tr-params-grid">
+          <div class="tr-param-box hidden" id="tr-source-box">
+            <span class="control-label">Source Parabola (y = a₁(x − h₁)² + k₁)</span>
+            <div class="tr-inputs-row">
+              <label>a₁ <input type="number" id="tr-a1" step="0.5" min="-5" max="5" value="1"></label>
+              <label>h₁ <input type="number" id="tr-h1" step="1" min="-8" max="8" value="0"></label>
+              <label>k₁ <input type="number" id="tr-k1" step="1" min="-10" max="10" value="0"></label>
+            </div>
+          </div>
+
+          <div class="tr-param-box">
+            <span class="control-label">Target Parabola (y = a(x − h)² + k)</span>
+            <div class="tr-inputs-row">
+              <label>a <input type="number" id="tr-a2" step="0.5" min="-5" max="5" value="2"></label>
+              <label>h <input type="number" id="tr-h2" step="1" min="-8" max="8" value="3"></label>
+              <label>k <input type="number" id="tr-k2" step="1" min="-10" max="10" value="-4"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab-layout">
+        <div class="lab-controls-card">
+          <h2>Mapping Rule &amp; Guided Walkthrough</h2>
+          <div class="tr-eq-summary">
+            <div><span class="readout-label">From (Source)</span><div id="tr-source-tex"></div></div>
+            <div><span class="readout-label">To (Target)</span><div id="tr-target-tex"></div></div>
+          </div>
+
+          <div class="tr-rule-box">
+            <span class="readout-label">Mapping Rule</span>
+            <div id="tr-mapping-tex" class="solution-highlight"></div>
+            <div id="tr-vertex-rel-tex" class="tr-rel-tex hidden"></div>
+          </div>
+
+          <div class="tr-guide-box">
+            <div class="dashboard-card-head">
+              <span class="readout-label">Step-by-Step Guide</span>
+              <div class="dashboard-actions">
+                <button type="button" class="btn btn-sm" id="tr-next-step-btn">Reveal Next Step</button>
+                <button type="button" class="btn btn-sm" id="tr-all-steps-btn">Show All</button>
+              </div>
+            </div>
+            <ol class="tr-steps-list" id="tr-steps-list"></ol>
+            <ul class="tr-desc-list hidden" id="tr-desc-list"></ul>
+          </div>
+
+          <div class="tr-table-wrap">
+            <div class="dashboard-card-head">
+              <span class="readout-label">Table of Values (Self-Check)</span>
+              <div class="dashboard-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="tr-check-table-btn">Check Table</button>
+                <button type="button" class="btn btn-sm" id="tr-fill-table-btn">Fill Table</button>
+              </div>
+            </div>
+            <table class="tr-table">
+              <thead>
+                <tr>
+                  <th>Source x</th>
+                  <th>Source y</th>
+                  <th>New x'</th>
+                  <th>New y'</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tr-table-body"></tbody>
+            </table>
+            <div class="feedback-banner hidden" id="tr-table-feedback" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="lab-canvas-card">
+          <div class="dashboard-card-head">
+            <span class="readout-label">Visual Graph &amp; Order Exploration</span>
+            <button type="button" class="btn btn-toggle btn-sm" id="tr-compare-order-btn" aria-pressed="false">Explore Order: Compare Translate-First vs. Stretch-First</button>
+          </div>
+          <canvas id="transform-canvas" width="600" height="440" aria-label="Transformation graph showing source and target parabolas"></canvas>
+          <p class="graph-legend">Dashed Gray: Source · Solid Blue: Target (Stretch/Reflect First) · Dashed Orange: Wrong Order (Translate First) · Green Dots: Mapped Points</p>
+          <div class="feedback-banner warning hidden" id="tr-order-insight"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Linear Systems View -->
+    <section id="view-linear" class="hidden" aria-labelledby="tab-linear">
+      <div class="controls-card">
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Skill</span>
+            <div class="segmented" id="lin-skill-segment" role="group" aria-label="Linear Systems Skill">
+              <button type="button" class="seg-btn active" data-skill="graph_single" aria-pressed="true">Graph One Line</button>
+              <button type="button" class="seg-btn" data-skill="graph_drill" aria-pressed="false">Graph System (2 Lines)</button>
+              <button type="button" class="seg-btn" data-skill="substitution" aria-pressed="false">Substitution</button>
+              <button type="button" class="seg-btn" data-skill="elimination" aria-pressed="false">Elimination</button>
+              <button type="button" class="seg-btn" data-skill="num_solutions" aria-pressed="false">Number of Solutions</button>
+              <button type="button" class="seg-btn" data-skill="application" aria-pressed="false">Applications</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Level</span>
+            <div class="segmented" id="lin-level-segment" role="group" aria-label="Linear Difficulty Level">
+              <button type="button" class="seg-btn active" data-level="1" aria-pressed="true">1 · Basic</button>
+              <button type="button" class="seg-btn" data-level="2" aria-pressed="false">2 · Core</button>
+              <button type="button" class="seg-btn" data-level="3" aria-pressed="false">3 · Challenging</button>
+              <button type="button" class="seg-btn" data-level="4" aria-pressed="false">4 · Enrichment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <article class="problem-card">
+        <div class="problem-meta">
+          <span class="badge" id="lin-skill-badge" data-form="standard">Graphing Drill</span>
+          <span class="badge" id="lin-level-badge" data-level="1">Level 1: Basic</span>
+          <button type="button" class="btn btn-sm hidden" id="lin-graph-toggle-btn" aria-expanded="false">Show Graph</button>
+          <span class="nelson-ref" id="lin-nelson-ref">Nelson MPM2D · Ch. 1</span>
+        </div>
+
+        <p class="problem-prompt" id="lin-prompt"></p>
+        <div class="equation-box" id="lin-equation" aria-live="polite"></div>
+
+        <!-- Interactive Graphing Grid (Always visible in Graphing Drill, toggleable otherwise) -->
+        <div class="lin-graph-wrap hidden" id="lin-graph-wrap">
+          <div class="lin-drill-toolbar" id="lin-drill-toolbar">
+            <div class="segmented" id="lin-active-line-seg" role="group" aria-label="Active Line to Plot">
+              <button type="button" class="seg-btn active" data-line="1" aria-pressed="true">Plot Line 1 (Blue) · <span id="lin-l1-count">0/2</span></button>
+              <button type="button" class="seg-btn" data-line="2" aria-pressed="false">Plot Line 2 (Teal) · <span id="lin-l2-count">0/2</span></button>
+            </div>
+            <div class="dashboard-actions">
+              <button type="button" class="btn btn-sm" id="lin-clear-l1-btn">Clear L1</button>
+              <button type="button" class="btn btn-sm" id="lin-clear-l2-btn">Clear L2</button>
+              <button type="button" class="btn btn-sm" id="lin-riserun-btn">Rise/Run Guide</button>
+            </div>
+          </div>
+          <canvas id="linear-canvas" width="480" height="480" aria-label="Interactive coordinate plane from -8 to 8"></canvas>
+          <p class="graph-legend" id="lin-graph-legend">Click the grid to place initial value (0, b) and a second point using slope m = rise / run.</p>
+        </div>
+
+        <div class="input-section">
+          <div id="lin-text-input-group">
+            <div class="input-row">
+              <div class="math-field-wrap">
+                <input type="text" id="lin-poi-input" class="math-fallback" placeholder="Enter Point of Intersection e.g. (2, -3)" aria-label="Enter point of intersection">
+              </div>
+            </div>
+          </div>
+
+          <div id="lin-choice-group" class="choice-group hidden" role="group" aria-label="Classification of Linear System">
+            <button type="button" class="btn choice-btn" data-choice="unique">1 Unique Solution (Intersecting)</button>
+            <button type="button" class="btn choice-btn" data-choice="perpendicular">1 Unique Solution (Perpendicular ⊥)</button>
+            <button type="button" class="btn choice-btn" data-choice="parallel">No Solution (Parallel ∥)</button>
+            <button type="button" class="btn choice-btn" data-choice="coincident">Infinite Solutions (Same Line)</button>
+          </div>
+
+          <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="lin-check-btn">Check Answer</button>
+            <button type="button" class="btn" id="lin-hint-btn">Hint (0/2)</button>
+            <button type="button" class="btn" id="lin-solution-btn">Show Solution</button>
+            <button type="button" class="btn btn-next" id="lin-next-btn">Next Question →</button>
+          </div>
+        </div>
+
+        <div class="feedback-banner hidden" id="lin-feedback-banner" role="status" aria-live="polite"></div>
+        <div class="hints-container hidden" id="lin-hints-container"></div>
+
+        <div class="solution-container hidden" id="lin-solution-container">
+          <h3>Step-by-Step Solution (Nelson MPM2D Ch. 1)</h3>
+          <ol class="solution-steps" id="lin-solution-steps"></ol>
+        </div>
+      </article>
+    </section>
+
+    <!-- Analytic Geometry View -->
+    <section id="view-geo" class="hidden" aria-labelledby="tab-geo">
+      <div class="controls-card">
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Topic</span>
+            <div class="segmented" id="geo-skill-segment" role="group" aria-label="Analytic Geometry Topic">
+              <button type="button" class="seg-btn active" data-skill="midpoint" aria-pressed="true">Midpoint Formula</button>
+              <button type="button" class="seg-btn" data-skill="distance" aria-pressed="false">Distance Formula</button>
+              <button type="button" class="seg-btn" data-skill="circle_origin" aria-pressed="false">Circle (x²+y²=r²)</button>
+              <button type="button" class="seg-btn" data-skill="special_lines" aria-pressed="false">4 Special Lines</button>
+              <button type="button" class="seg-btn" data-skill="special_centres" aria-pressed="false">4 Special Centres</button>
+              <button type="button" class="seg-btn" data-skill="prove_property" aria-pressed="false">Prove Properties</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Level</span>
+            <div class="segmented" id="geo-level-segment" role="group" aria-label="Geometry Difficulty Level">
+              <button type="button" class="seg-btn active" data-level="1" aria-pressed="true">1 · Basic</button>
+              <button type="button" class="seg-btn" data-level="2" aria-pressed="false">2 · Core</button>
+              <button type="button" class="seg-btn" data-level="3" aria-pressed="false">3 · Challenging</button>
+              <button type="button" class="seg-btn" data-level="4" aria-pressed="false">4 · Enrichment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <article class="problem-card">
+        <div class="problem-meta">
+          <span class="badge" id="geo-skill-badge" data-form="vertex">Midpoint Formula</span>
+          <span class="badge" id="geo-level-badge" data-level="1">Level 1: Basic</span>
+          <button type="button" class="btn btn-sm" id="geo-ggb-toggle-btn" aria-expanded="false">Open GeoGebra Sandbox</button>
+          <span class="nelson-ref" id="geo-nelson-ref">Nelson MPM2D · Ch. 2</span>
+        </div>
+
+        <p class="problem-prompt" id="geo-prompt"></p>
+        <div class="equation-box" id="geo-equation" aria-live="polite"></div>
+
+        <!-- Embedded Educational Non-Profit GeoGebra Classic Sandbox -->
+        <div class="ggb-panel hidden" id="geo-ggb-panel">
+          <div class="dashboard-card-head">
+            <span class="readout-label">GeoGebra Classic (Educational &amp; Non-Profit)</span>
+            <div class="dashboard-actions">
+              <button type="button" class="btn btn-sm" id="geo-copy-ggb-btn">Copy Commands</button>
+              <a class="btn btn-sm" href="https://www.geogebra.org/classic" target="_blank" rel="noopener noreferrer">Open Full Tab ↗</a>
+            </div>
+          </div>
+          <pre class="ggb-cmd-box" id="geo-ggb-cmds"></pre>
+          <iframe
+            id="geogebra-frame"
+            title="GeoGebra Classic Geometry Sandbox"
+            data-src="https://www.geogebra.org/classic?embed"
+            loading="lazy"
+            allowfullscreen>
+          </iframe>
+          <p class="graph-legend">Paste the commands above into GeoGebra’s Input Bar to verify lengths, midpoints, slopes, perpendicular bisectors, and centres interactively.</p>
+        </div>
+
+        <div class="input-section">
+          <div id="geo-text-input-group">
+            <div class="input-row">
+              <div class="math-field-wrap">
+                <input type="text" id="geo-input" class="math-fallback" placeholder="Enter answer e.g. (2, -3) or 2sqrt(5)" aria-label="Enter geometry answer">
+              </div>
+            </div>
+          </div>
+
+          <div id="geo-choice-group" class="choice-group hidden" role="group" aria-label="Geometry Choices"></div>
+
+          <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="geo-check-btn">Check Answer</button>
+            <button type="button" class="btn" id="geo-hint-btn">Hint (0/2)</button>
+            <button type="button" class="btn" id="geo-solution-btn">Show Proof / Solution</button>
+            <button type="button" class="btn btn-next" id="geo-next-btn">Next Question →</button>
+          </div>
+        </div>
+
+        <div class="feedback-banner hidden" id="geo-feedback-banner" role="status" aria-live="polite"></div>
+        <div class="hints-container hidden" id="geo-hints-container"></div>
+
+        <div class="solution-container hidden" id="geo-solution-container">
+          <h3>Step-by-Step Proof / Solution (Nelson MPM2D Ch. 2)</h3>
+          <ol class="solution-steps" id="geo-solution-steps"></ol>
+        </div>
+      </article>
+    </section>
+
+    <!-- Trigonometry View (UDL & Differentiated Instruction) -->
+    <section id="view-trig" class="hidden" aria-labelledby="tab-trig">
+      <div class="controls-card">
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Skill</span>
+            <div class="segmented" id="trig-skill-segment" role="group" aria-label="Trigonometry Topic">
+              <button type="button" class="seg-btn" data-skill="similar_triangles" aria-pressed="false">0 · Similar △ (AA/SAS~/SSS~)</button>
+              <button type="button" class="seg-btn active" data-skill="sine" aria-pressed="true">1 · Sine</button>
+              <button type="button" class="seg-btn" data-skill="cosine" aria-pressed="false">2 · Cosine</button>
+              <button type="button" class="seg-btn" data-skill="tangent" aria-pressed="false">3 · Tangent</button>
+              <button type="button" class="seg-btn" data-skill="sohcahtoa_mix" aria-pressed="false">4 · Primary Mix</button>
+              <button type="button" class="seg-btn" data-skill="right_app" aria-pressed="false">5 · Right Apps</button>
+              <button type="button" class="seg-btn" data-skill="sine_law" aria-pressed="false">6 · Sine Law</button>
+              <button type="button" class="seg-btn" data-skill="cosine_law" aria-pressed="false">7 · Cosine Law</button>
+              <button type="button" class="seg-btn" data-skill="acute_mix" aria-pressed="false">8 · Sine/Cos Mix</button>
+              <button type="button" class="seg-btn" data-skill="acute_app" aria-pressed="false">9 · Acute Apps</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">DI Level</span>
+            <div class="segmented" id="trig-level-segment" role="group" aria-label="Differentiated Instruction Level">
+              <button type="button" class="seg-btn active" data-level="1" aria-pressed="true">1 · Basic (Scaffolded)</button>
+              <button type="button" class="seg-btn" data-level="2" aria-pressed="false">2 · Core</button>
+              <button type="button" class="seg-btn" data-level="3" aria-pressed="false">3 · Challenging (Decimals)</button>
+              <button type="button" class="seg-btn" data-level="4" aria-pressed="false">4 · Enrichment</button>
+            </div>
+          </div>
+
+          <div class="control-group udl-bar">
+            <button type="button" class="btn btn-toggle btn-sm active" id="trig-color-btn" aria-pressed="true">Color-Coded Diagram</button>
+            <button type="button" class="btn btn-sm" id="trig-formula-btn" aria-expanded="false">Formula Sheet</button>
+            <button type="button" class="btn btn-sm" id="trig-speak-btn">🔊 Read Aloud</button>
+          </div>
+        </div>
+
+        <div class="trig-formula-sheet hidden" id="trig-formula-sheet">
+          <div><strong>Similar Triangles:</strong> AA/AAA~ (2+ equal angles) · SAS~ (2 proportional sides &amp; equal included angle) · SSS~ (3 sides proportional)</div>
+          <div><strong>SOH-CAH-TOA (Right Triangles):</strong> sin θ = Opp / Hyp · cos θ = Adj / Hyp · tan θ = Opp / Adj</div>
+          <div><strong>Sine Law (Acute):</strong> a / sin A = b / sin B = c / sin C</div>
+          <div><strong>Cosine Law (SAS / SSS):</strong> c² = a² + b² − 2ab cos C · cos C = (a² + b² − c²) / (2ab)</div>
+        </div>
+      </div>
+
+      <article class="problem-card">
+        <div class="problem-meta">
+          <span class="badge" id="trig-skill-badge" data-form="factored">Sine Ratio</span>
+          <span class="badge" id="trig-level-badge" data-level="1">Level 1: Basic</span>
+          <span class="nelson-ref" id="trig-nelson-ref">Nelson MPM2D · Ch. 7</span>
+        </div>
+
+        <p class="problem-prompt" id="trig-prompt"></p>
+        <div class="equation-box" id="trig-equation" aria-live="polite"></div>
+
+        <div class="trig-diagram-wrap">
+          <canvas id="trig-canvas" width="420" height="260" aria-label="Labeled triangle diagram"></canvas>
+          <p class="graph-legend" id="trig-udl-legend">UDL Color Guide: Green = Opposite · Amber = Adjacent · Blue = Hypotenuse · Purple = Angle (Degree Mode)</p>
+        </div>
+
+        <div class="input-section">
+          <div class="input-row" id="trig-text-input-group">
+            <div class="math-field-wrap">
+              <input type="text" id="trig-input" class="math-fallback" placeholder="Enter value rounded to 1 decimal place (e.g. 14.3)" aria-label="Enter trigonometric answer">
+            </div>
+            <span class="stat-chip trig-unit-chip" id="trig-unit-chip">cm</span>
+          </div>
+
+          <div id="trig-choice-group" class="choice-group hidden" role="group" aria-label="Similar Triangle Theorem Choices"></div>
+
+          <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="trig-check-btn">Check Answer</button>
+            <button type="button" class="btn" id="trig-hint-btn">Hint (0/2)</button>
+            <button type="button" class="btn" id="trig-solution-btn">Show Solution</button>
+            <button type="button" class="btn btn-next" id="trig-next-btn">Next Question →</button>
+          </div>
+        </div>
+
+        <div class="feedback-banner hidden" id="trig-feedback-banner" role="status" aria-live="polite"></div>
+        <div class="hints-container hidden" id="trig-hints-container"></div>
+
+        <div class="solution-container hidden" id="trig-solution-container">
+          <h3>Step-by-Step Solution (Nelson MPM2D Ch. 7 &amp; 8)</h3>
+          <ol class="solution-steps" id="trig-solution-steps"></ol>
+        </div>
+      </article>
+    </section>
+
+    <!-- Mental Math, Proportional Reasoning & Algebra Problem Strings View -->
+    <section id="view-mental" class="hidden" aria-labelledby="tab-mental">
+      <div class="controls-card">
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Mode</span>
+            <div class="segmented" id="mental-mode-segment" role="group" aria-label="Mental Math Mode">
+              <button type="button" class="seg-btn active" data-mode="prop" aria-pressed="true">Proportional Reasoning Drill</button>
+              <button type="button" class="seg-btn" data-mode="string" aria-pressed="false">Algebra Problem Strings (Student / Teacher)</button>
+              <button type="button" class="seg-btn" data-mode="btc" aria-pressed="false">BTC Observation &amp; Thinking Tasks</button>
+            </div>
+          </div>
+
+          <div class="control-group" id="mental-streak-badge-wrap">
+            <span class="stat-chip">Drill Streak: <strong id="prop-streak">0</strong></span>
+          </div>
+        </div>
+
+        <!-- Proportional Reasoning Controls -->
+        <div id="prop-controls">
+          <div class="control-row">
+            <div class="control-group">
+              <span class="control-label">Topic</span>
+              <div class="segmented" id="prop-type-segment" role="group" aria-label="Proportion Topic">
+                <button type="button" class="seg-btn active" data-type="mixed" aria-pressed="true">Mixed</button>
+                <button type="button" class="seg-btn" data-type="ratios" aria-pressed="false">Ratios</button>
+                <button type="button" class="seg-btn" data-type="unit_rate" aria-pressed="false">Unit Rates</button>
+                <button type="button" class="seg-btn" data-type="percent" aria-pressed="false">Percents</button>
+                <button type="button" class="seg-btn" data-type="algebraic_prop" aria-pressed="false">Algebraic Proportions</button>
+              </div>
+            </div>
+          </div>
+          <div class="control-row">
+            <div class="control-group">
+              <span class="control-label">Level</span>
+              <div class="segmented" id="prop-level-segment" role="group" aria-label="Proportion Level">
+                <button type="button" class="seg-btn active" data-level="1" aria-pressed="true">1 · Basic</button>
+                <button type="button" class="seg-btn" data-level="2" aria-pressed="false">2 · Core</button>
+                <button type="button" class="seg-btn" data-level="3" aria-pressed="false">3 · Challenging</button>
+                <button type="button" class="seg-btn" data-level="4" aria-pressed="false">4 · Enrichment</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Algebra Problem Strings Controls -->
+        <div id="string-controls" class="hidden">
+          <div class="control-row">
+            <div class="control-group">
+              <span class="control-label">String</span>
+              <div class="segmented" id="str-theme-segment" role="group" aria-label="Problem String Theme">
+                <button type="button" class="seg-btn active" data-theme="distributive" aria-pressed="true">Distributive Property</button>
+                <button type="button" class="seg-btn" data-theme="diff_squares" aria-pressed="false">Difference of Squares</button>
+                <button type="button" class="seg-btn" data-theme="mental_solve" aria-pressed="false">Balance Solving</button>
+                <button type="button" class="seg-btn" data-theme="rate_of_change" aria-pressed="false">Linear Stepping</button>
+                <button type="button" class="seg-btn" data-theme="perfect_squares" aria-pressed="false">Squaring &amp; (x+a)²</button>
+                <button type="button" class="seg-btn" data-theme="factoring_mental" aria-pressed="false">Sum-Product Factoring</button>
+                <button type="button" class="seg-btn" data-theme="fraction_clearing" aria-pressed="false">Clearing Fractions</button>
+                <button type="button" class="seg-btn" data-theme="analytic_geometry" aria-pressed="false">Analytic Geometry</button>
+                <button type="button" class="seg-btn" data-theme="trig_ratios" aria-pressed="false">Trig Ratios</button>
+              </div>
+            </div>
+          </div>
+          <div class="control-row">
+            <div class="control-group">
+              <button type="button" class="btn btn-primary btn-sm" id="str-new-btn">New Random String</button>
+              <button type="button" class="btn btn-sm" id="str-reveal-next-btn">Reveal Next Step</button>
+              <button type="button" class="btn btn-sm" id="str-reveal-all-btn">Reveal All Steps</button>
+            </div>
+            <button type="button" class="btn btn-toggle btn-sm" id="str-projector-btn" aria-pressed="false">Teacher Projector Mode</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proportional Reasoning Card -->
+      <article class="problem-card" id="mental-prop-panel">
+        <div class="problem-meta">
+          <span class="badge" id="prop-type-badge" data-form="standard">Proportional Reasoning</span>
+          <span class="badge" id="prop-level-badge" data-level="1">Level 1: Basic</span>
+          <span class="nelson-ref">Mental Math · Ratios, Rates &amp; Proportions</span>
+        </div>
+
+        <p class="problem-prompt" id="prop-prompt"></p>
+        <div class="equation-box" id="prop-equation" aria-live="polite"></div>
+
+        <div class="input-section">
+          <div class="input-row">
+            <div class="math-field-wrap">
+              <input type="text" id="prop-input" class="math-fallback" placeholder="Enter mental answer (e.g. 24 or 9/2)" aria-label="Enter proportional reasoning answer">
+            </div>
+            <span class="stat-chip trig-unit-chip" id="prop-unit-chip"></span>
+          </div>
+
+          <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="prop-check-btn">Check Answer</button>
+            <button type="button" class="btn" id="prop-strategy-btn">Mental Strategy</button>
+            <button type="button" class="btn" id="prop-solution-btn">Show Solution</button>
+            <button type="button" class="btn btn-next" id="prop-next-btn">Next Drill →</button>
+          </div>
+        </div>
+
+        <div class="feedback-banner hidden" id="prop-feedback-banner" role="status" aria-live="polite"></div>
+        <div class="hints-container hidden" id="prop-strategy-box"></div>
+        <div class="solution-container hidden" id="prop-solution-container">
+          <h3>Mental Strategy Breakdown</h3>
+          <ol class="solution-steps" id="prop-solution-steps"></ol>
+        </div>
+      </article>
+
+      <!-- Algebra Problem Strings Card -->
+      <article class="problem-card hidden" id="mental-string-panel">
+        <div class="problem-meta">
+          <span class="badge" data-form="vertex">Algebra Problem String</span>
+          <span class="nelson-ref" id="str-title-ref">Mental Math Chain</span>
+        </div>
+        <div class="hint-item" id="str-teacher-goal"></div>
+        <div class="string-steps-list" id="str-steps-list"></div>
+      </article>
+
+      <!-- Building Thinking Classrooms (BTC) Observation & Thinking Tasks Hub -->
+      <div id="mental-btc-panel" class="hidden">
+        <article class="problem-card btc-section-card">
+          <div class="dashboard-card-head">
+            <div>
+              <h2>Thin-Sliced MPM2D Thinking Tasks (VNPS Ready)</h2>
+              <p class="brand-sub">Peter Liljedahl BTC Framework: Verbal Launch → Thin-Slicing (Mild to Extension) → Consolidate from the Bottom → CYU</p>
+            </div>
+            <div class="segmented" id="btc-task-segment" role="group" aria-label="BTC Task Topic"></div>
+          </div>
+
+          <div class="hint-item" id="btc-launch-box"></div>
+          <div class="btc-slices-grid" id="btc-slices-grid"></div>
+          <div class="btc-consolidation-box" id="btc-consolidation-box"></div>
+        </article>
+
+        <div class="btc-two-col">
+          <article class="problem-card">
+            <div class="dashboard-card-head">
+              <h2>Visibly Random Groups of 3</h2>
+              <button type="button" class="btn btn-primary btn-sm" id="btc-vrg-btn">Shuffle Random Groups</button>
+            </div>
+            <p class="brand-sub">Enter class size (e.g. 24) or paste comma/line-separated student names to assign vertical whiteboard stations:</p>
+            <textarea id="btc-vrg-input" class="btc-textarea" rows="3" placeholder="24  (or: Maya, Leo, Priya, Ethan, ...)">24</textarea>
+            <div class="btc-vrg-grid" id="btc-vrg-grid"></div>
+          </article>
+
+          <article class="problem-card">
+            <div class="dashboard-card-head">
+              <h2>BTC Lesson Observation Look-Fors</h2>
+              <span class="stat-chip" id="btc-obs-score">0 / 8 Observed</span>
+            </div>
+            <p class="brand-sub">Checklist for teacher self-reflection, peer coaching, or formal lesson observation:</p>
+            <div class="btc-checklist" id="btc-obs-list"></div>
+            <div class="actions-row" style="margin-top: 0.75rem;">
+              <button type="button" class="btn btn-sm" id="btc-obs-reset-btn">Clear Checklist</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Math Simulations View -->
+    <section id="view-sim" class="hidden" aria-labelledby="tab-sim">
+      <div class="controls-card">
+        <div class="control-row">
+          <div class="control-group">
+            <span class="control-label">Simulation</span>
+            <div class="segmented" id="sim-mode-segment" role="group" aria-label="Interactive Simulation">
+              <button type="button" class="seg-btn active" data-sim="trig" aria-pressed="true">Trig Ratio Invariance Lab</button>
+              <button type="button" class="seg-btn" data-sim="geo" aria-pressed="false">Analytic Geometry Explorer</button>
+            </div>
+          </div>
+          <span class="sim-invariant-badge">Drag points or use sliders to discover MPM2D relations</span>
+        </div>
+      </div>
+
+      <!-- Trig Ratio Invariance Simulation -->
+      <div id="sim-trig-panel" class="sim-layout">
+        <div class="problem-card sim-canvas-card">
+          <div class="problem-meta">
+            <span class="badge" data-form="standard">Right Triangle Similarity (AA~)</span>
+            <span class="nelson-ref">Drag B or C to resize sides · Drag θ handle to rotate angle</span>
+          </div>
+          <canvas id="sim-trig-canvas" class="sim-canvas" width="680" height="400"></canvas>
+        </div>
+
+        <aside class="problem-card sim-sidebar">
+          <h3>Controls &amp; Live Ratios</h3>
+          <div class="sim-sliders">
+            <label class="sim-slider-row">
+              <span>Angle θ = <strong id="sim-trig-angle-val">35°</strong></span>
+              <input type="range" id="sim-trig-angle" min="15" max="75" step="1" value="35">
+            </label>
+            <label class="sim-slider-row">
+              <span>Triangle Scale k = <strong id="sim-trig-scale-val">1.00×</strong></span>
+              <input type="range" id="sim-trig-scale" min="0.6" max="2.4" step="0.05" value="1.0">
+            </label>
+          </div>
+
+          <div class="actions-row" id="sim-trig-presets" style="margin: 0.75rem 0;">
+            <button type="button" class="btn btn-sm" data-angle="30">30°</button>
+            <button type="button" class="btn btn-sm" data-angle="45">45°</button>
+            <button type="button" class="btn btn-sm" data-angle="60">60°</button>
+            <button type="button" class="btn btn-sm" id="sim-trig-reset-btn">Reset</button>
+          </div>
+
+          <div class="sim-readout-grid" id="sim-trig-readout"></div>
+          <div class="hint-item" style="margin-top: 0.8rem;">
+            <span class="hint-tag">Key Discovery</span>
+            <span>Slide <strong>k</strong> (or drag B / C): every side length grows or shrinks proportionally, yet <strong>sin θ</strong>, <strong>cos θ</strong>, and <strong>tan θ</strong> never change for a fixed angle!</span>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Analytic Geometry Simulation -->
+      <div id="sim-geo-panel" class="sim-layout hidden">
+        <div class="problem-card sim-canvas-card">
+          <div class="problem-meta">
+            <span class="badge" data-form="vertex">Coordinate Segment &amp; Bisector</span>
+            <span class="nelson-ref">Drag endpoints A and B on the coordinate grid</span>
+          </div>
+          <canvas id="sim-geo-canvas" class="sim-canvas" width="680" height="400"></canvas>
+        </div>
+
+        <aside class="problem-card sim-sidebar">
+          <h3>Segment Properties</h3>
+          <div class="actions-row" style="margin-bottom: 0.75rem;">
+            <label class="sim-toggle-label">
+              <input type="checkbox" id="sim-geo-perpbis-toggle" checked>
+              <span>Show Perpendicular Bisector</span>
+            </label>
+            <button type="button" class="btn btn-sm" id="sim-geo-reset-btn">Reset A, B</button>
+          </div>
+          <div class="sim-readout-grid" id="sim-geo-readout"></div>
+          <div class="hint-item" style="margin-top: 0.8rem;">
+            <span class="hint-tag">Key Discovery</span>
+            <span>Watch how <strong>m × m⊥ = −1</strong> stays exact as you drag A and B, and how the perpendicular bisector always passes through Midpoint M at 90°.</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Progress Dashboard View -->
+    <section id="view-progress" class="hidden" aria-labelledby="tab-progress">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Attempted</div>
+          <div class="kpi-value" id="kpi-total">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Overall Accuracy</div>
+          <div class="kpi-value" id="kpi-accuracy">0%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Streak</div>
+          <div class="kpi-value" id="kpi-streak">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Current Level</div>
+          <div class="kpi-value" id="kpi-level">Level 1 · Basic</div>
+        </div>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="dashboard-card-head">
+          <h2>Skills Breakdown</h2>
+        </div>
+        <div class="skills-grid" id="skills-grid"></div>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="dashboard-card-head">
+          <h2>Solving Mastery Matrix (Forms × Adaptive Levels)</h2>
+          <div class="dashboard-actions">
+            <button type="button" class="btn" id="export-csv-btn">Export CSV</button>
+            <button type="button" class="btn btn-danger" command="show-modal" commandfor="reset-dialog" id="open-reset-btn">Reset Progress</button>
+          </div>
+        </div>
+        <div class="mastery-grid" id="mastery-grid"></div>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="dashboard-card-head">
+          <h2>Recent Practice Log</h2>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Problem</th>
+                <th>Skill / Form</th>
+                <th>Level</th>
+                <th>Result</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="reset-dialog" aria-labelledby="reset-dialog-title">
+    <h2 id="reset-dialog-title">Reset All Progress?</h2>
+    <p>This will clear your mastery matrix, skill stats, streaks, and recent practice history. This cannot be undone.</p>
+    <form method="dialog" class="dialog-actions">
+      <button type="submit" class="btn" value="cancel" autofocus>Cancel</button>
+      <button type="submit" class="btn btn-danger" value="confirm">Reset Progress</button>
+    </form>
+  </dialog>
+
+  <script>
+    if (!('commandForElement' in HTMLButtonElement.prototype)) {
+      document.getElementById('open-reset-btn')?.addEventListener('click', () => {
+        document.getElementById('reset-dialog')?.showModal();
+      });
+    }
+  </script>
+</body>
+</html>
