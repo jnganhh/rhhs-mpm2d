@@ -6263,7 +6263,7 @@ return { GEO_SKILL_META, generateGeometryProblem, checkGeometryAnswer };
 // Covers: Sine, Cosine, Tangent, Primary Mix, Right-Triangle Applications,
 // Sine Law, Cosine Law, Acute-Triangle Mix, and Acute-Triangle Applications.
 
-const { evaluateMathExpression } = __require("./math-engine.js");
+const { formatFractionLatex, evaluateMathExpression } = __require("./math-engine.js");
 const TRIG_SKILL_META = {
   similar_triangles: { id: 'similar_triangles', name: 'Similar Triangles (AA / SAS~ / SSS~)', short: 'Similar △' },
   sine: { id: 'sine', name: 'Sine Ratio', short: 'Sine' },
@@ -6957,7 +6957,7 @@ const SIMILAR_CHOICES = [
   { id: 'not_similar', label: 'Not Similar' },
 ];
 
-function generateSimilarTriangles(level) {
+function generateSimilarityTheoremChoice(level) {
   const kind = pick(['aa', 'sas', 'sss', 'not_similar']);
   const k = level <= 2 ? pick([2, 3]) : pick([1.5, 2.5, 3]);
 
@@ -7137,6 +7137,263 @@ function generateSimilarTriangles(level) {
   };
 }
 
+function generateSimilarTriangles(level) {
+  // Level 1 (Low Floor): 50% visual theorem identification (AA/SAS~/SSS~), 50% simple integer scale factor missing side
+  if (level === 1) {
+    if (Math.random() < 0.5) {
+      return generateSimilarityTheoremChoice(level);
+    }
+    const ab = randInt(3, 8);
+    const bc = randInt(4, 10);
+    const k = pick([2, 3, 4]);
+    const de = ab * k;
+    const ef = bc * k;
+
+    return {
+      skill: 'similar_triangles',
+      level,
+      inputType: 'number',
+      unit: 'cm',
+      nelsonRef: 'Ch. 7.1 — Similar Triangles Scale Factor (Low Floor)',
+      promptText: 'Given △ABC ~ △DEF, find the missing side length EF (in cm):',
+      equationLatex: `\\triangle ABC \\sim \\triangle DEF, \\quad AB = ${ab}\\text{ cm}, \\; BC = ${bc}\\text{ cm}, \\; DE = ${de}\\text{ cm}, \\; EF = x`,
+      expectedValue: ef,
+      exactExpectedLatex: String(ef),
+      diagram: {
+        type: 'similar',
+        t1: { A: '', B: '', C: '', ab: `${ab}`, bc: `${bc}`, ca: '' },
+        t2: { D: '', E: '', F: '', de: `${de}`, ef: 'x', fd: '' },
+      },
+      hints: [
+        'Find the scale factor k by dividing corresponding sides DE ÷ AB.',
+        `Multiply BC = ${bc} cm by k = ${de} ÷ ${ab} = ${k}.`,
+      ],
+      solutionSteps: [
+        `\\text{Scale factor } k = \\frac{DE}{AB} = \\frac{${de}}{${ab}} = ${k}`,
+        `x = EF = k \\cdot BC = ${k}(${bc}) = ${ef}\\text{ cm}`,
+      ],
+    };
+  }
+
+  // Level 2 (Core): 50% decimal/fractional scale factor proportion, 50% indirect measurement (shadows)
+  if (level === 2) {
+    if (Math.random() < 0.5) {
+      const k = pick([1.5, 2.5, 3.5]);
+      const ab = pick([4, 6, 8, 10]);
+      const bc = randInt(4, 12);
+      const de = Number((ab * k).toFixed(1));
+      const ef = Number((bc * k).toFixed(2));
+      const efTex = Number.isInteger(ef) ? String(ef) : formatFractionLatex(Math.round(ef * 2), 2);
+
+      return {
+        skill: 'similar_triangles',
+        level,
+        inputType: 'number',
+        unit: 'cm',
+        nelsonRef: 'Ch. 7.2 — Proportions with Non-Integer Scale Factors',
+        promptText: 'Given △ABC ~ △DEF, use equal ratios to solve for side EF = x (in cm):',
+        equationLatex: `\\triangle ABC \\sim \\triangle DEF, \\quad AB = ${ab}, \\; BC = ${bc}, \\; DE = ${de}, \\; EF = x`,
+        expectedValue: ef,
+        exactExpectedLatex: efTex,
+        diagram: {
+          type: 'similar',
+          t1: { A: '', B: '', C: '', ab: String(ab), bc: String(bc), ca: '' },
+          t2: { D: '', E: '', F: '', de: String(de), ef: 'x', fd: '' },
+        },
+        hints: [
+          `Set up a proportion comparing corresponding sides: AB / DE = BC / EF.`,
+          `Solve ${ab} / ${de} = ${bc} / x (or scale factor k = ${k}).`,
+        ],
+        solutionSteps: [
+          `\\frac{${de}}{${ab}} = \\frac{x}{${bc}} \\implies k = ${k}`,
+          `x = ${k} \\times ${bc} = ${ef}\\text{ cm}`,
+        ],
+      };
+    }
+
+    const h1 = pick([1.5, 1.6, 1.8, 2.0]);
+    const s1 = pick([2, 2.5, 3, 4]);
+    const k = randInt(3, 7);
+    const s2 = s1 * k;
+    const h2 = Number((h1 * k).toFixed(2));
+    return {
+      skill: 'similar_triangles',
+      level,
+      inputType: 'number',
+      unit: 'm',
+      nelsonRef: 'Ch. 7.2 — Indirect Measurement (Shadows)',
+      promptText: `At the same time of day (equal sun angles), a ${h1} m pole casts a ${s1} m shadow while a tree casts a ${s2} m shadow. Find the tree's height x (in m):`,
+      equationLatex: `\\frac{x}{${h1}\\text{ m}} = \\frac{${s2}\\text{ m}}{${s1}\\text{ m}}`,
+      expectedValue: h2,
+      exactExpectedLatex: String(h2),
+      diagram: {
+        type: 'similar',
+        t1: { A: '', B: '90°', C: 'Sun ∠', ab: `${h1}m`, bc: `${s1}m`, ca: '' },
+        t2: { D: '', E: '90°', F: 'Sun ∠', de: 'x', ef: `${s2}m`, fd: '' },
+      },
+      hints: [
+        'Both vertical objects make 90° with the ground and match the sun angle, so the triangles are similar by AA~.',
+        `Scale factor from pole shadow (${s1} m) to tree shadow (${s2} m) is ${k}. Multiply ${h1} by ${k}.`,
+      ],
+      solutionSteps: [
+        `\\text{Similar by AA}\\sim: \\; \\frac{x}{${h1}} = \\frac{${s2}}{${s1}} = ${k}`,
+        `x = ${h1} \\times ${k} = ${h2}\\text{ m}`,
+      ],
+    };
+  }
+
+  // Level 3 (Challenging): 50% nested parallel-line triangle (trap: add segments for full side!), 50% algebraic side lengths
+  if (level === 3) {
+    if (Math.random() < 0.5) {
+      const k = pick([2, 3, 4]);
+      const p = randInt(2, 6);
+      const ext = p * (k - 1);
+      const deFull = p + ext;
+      const bcSmall = randInt(3, 8);
+      const efLarge = bcSmall * k;
+
+      return {
+        skill: 'similar_triangles',
+        level,
+        inputType: 'number',
+        unit: 'cm',
+        nelsonRef: 'Ch. 7.2 — Nested Parallel Triangles (DE = AB + Extension)',
+        promptText: `Smaller △ABC is nested inside larger △DEF (∠A = ∠D and parallel bases BC ∥ EF), where side DE extends past B by ${ext} cm. Find base BC = x (in cm):`,
+        equationLatex: `AB = ${p}, \\; \\text{Extension } B\\!\\to\\!E = ${ext}, \\; EF = ${efLarge}, \\; BC = x`,
+        expectedValue: bcSmall,
+        exactExpectedLatex: String(bcSmall),
+        diagram: {
+          type: 'similar',
+          t1: { A: 'θ', B: '', C: '', ab: String(p), bc: 'x', ca: '' },
+          t2: { D: 'θ', E: '', F: '', de: `${p}+${ext}`, ef: String(efLarge), fd: '' },
+        },
+        hints: [
+          `Watch the common trap! The full side of the large triangle is DE = AB + extension = ${p} + ${ext} = ${deFull}, NOT ${ext}.`,
+          `Use AB / DE = BC / EF: solve ${p} / ${deFull} = x / ${efLarge}.`,
+        ],
+        solutionSteps: [
+          `DE = ${p} + ${ext} = ${deFull}\\text{ cm} \\quad \\text{(scale factor } k = \\frac{${deFull}}{${p}} = ${k}\\text{)}`,
+          `\\frac{x}{${efLarge}} = \\frac{${p}}{${deFull}} \\implies x = \\frac{${efLarge}}{${k}} = ${bcSmall}\\text{ cm}`,
+        ],
+      };
+    }
+
+    const k = pick([2, 3]);
+    const m = k === 2 ? 1 : 2;
+    const xSol = randInt(3, 9);
+    const ab = randInt(3, 7);
+    const de = ab * k;
+    const c1 = randInt(1, 5);
+    const c2 = (k - m) * xSol + k * c1;
+    const efExpr = m === 1 ? `x + ${c2}` : `${m}x + ${c2}`;
+
+    return {
+      skill: 'similar_triangles',
+      level,
+      inputType: 'number',
+      unit: '',
+      nelsonRef: 'Ch. 7.2 — Solving Algebraic Sides in Similar Triangles',
+      promptText: 'Given △ABC ~ △DEF with algebraic side lengths, solve for x:',
+      equationLatex: `AB = ${ab}, \\; DE = ${de}, \\; BC = x + ${c1}, \\; EF = ${efExpr}`,
+      expectedValue: xSol,
+      exactExpectedLatex: String(xSol),
+      diagram: {
+        type: 'similar',
+        t1: { A: '', B: '', C: '', ab: String(ab), bc: `x+${c1}`, ca: '' },
+        t2: { D: '', E: '', F: '', de: String(de), ef: efExpr, fd: '' },
+      },
+      hints: [
+        `First find the scale factor from DE / AB = ${de} / ${ab} = ${k}.`,
+        `Set EF = ${k} · BC: write ${efExpr} = ${k}(x + ${c1}) and solve the linear equation for x.`,
+      ],
+      solutionSteps: [
+        `\\frac{DE}{AB} = \\frac{${de}}{${ab}} = ${k} \\implies EF = ${k} \\cdot BC`,
+        `${efExpr} = ${k}(x + ${c1}) = ${k}x + ${k * c1}`,
+        `x = ${xSol}`,
+      ],
+    };
+  }
+
+  // Level 4 (High Ceiling): 50% Area Scaling (A₂ / A₁ = k²), 50% Altitude to Hypotenuse Geometric Mean (h² = p·q)
+  if (Math.random() < 0.5) {
+    const useFracScale = Math.random() < 0.4;
+    const a = useFracScale ? 4 : randInt(3, 6);
+    const d = useFracScale ? 6 : a * pick([2, 3, 4]);
+    const k = d / a;
+    const area1 = useFracScale ? pick([8, 12, 16, 20]) : randInt(6, 18);
+    const area2 = Math.round(area1 * k * k);
+    const kTex = Number.isInteger(k) ? String(k) : '\\frac{3}{2}';
+
+    return {
+      skill: 'similar_triangles',
+      level,
+      inputType: 'number',
+      unit: 'cm²',
+      nelsonRef: 'Contest Enrichment — Area Scaling of Similar Triangles (k²)',
+      promptText: `Given △ABC ~ △DEF with corresponding sides AB = ${a} cm, DE = ${d} cm, and Area(△ABC) = ${area1} cm², find Area(△DEF) in cm²:`,
+      equationLatex: `\\triangle ABC \\sim \\triangle DEF, \\quad \\frac{DE}{AB} = \\frac{${d}}{${a}}, \\quad \\text{Area}(\\triangle ABC) = ${area1}\\text{ cm}^2`,
+      expectedValue: area2,
+      exactExpectedLatex: String(area2),
+      diagram: {
+        type: 'similar',
+        t1: { A: '', B: '', C: '', ab: `${a}cm`, bc: `Area=${area1}`, ca: '' },
+        t2: { D: '', E: '', F: '', de: `${d}cm`, ef: 'Area=?', fd: '' },
+      },
+      hints: [
+        'Remember: when lengths scale by factor k, BOTH base and height scale by k, so Area scales by k²!',
+        `Compute k = ${d} / ${a} = ${k}, then multiply Area(△ABC) = ${area1} by k² = ${Number.isInteger(k * k) ? k * k : '9/4'}.`,
+      ],
+      solutionSteps: [
+        `\\text{Length scale factor } k = \\frac{${d}}{${a}} = ${kTex}`,
+        `\\text{Area scale factor} = k^2 = \\left(${kTex}\\right)^2 = ${Number.isInteger(k * k) ? k * k : '\\frac{9}{4}'}`,
+        `\\text{Area}(\\triangle DEF) = ${area1} \\times k^2 = ${area2}\\text{ cm}^2`,
+      ],
+    };
+  }
+
+  // Right Triangle Altitude Geometric Mean: h² = p * q
+  const [p, q, h] = pick([
+    [4, 9, 6],
+    [2, 8, 4],
+    [3, 12, 6],
+    [4, 16, 8],
+    [9, 16, 12],
+    [2, 18, 6],
+    [5, 20, 10],
+    [8, 18, 12],
+  ]);
+
+  return {
+    skill: 'similar_triangles',
+    level,
+    inputType: 'number',
+    unit: 'cm',
+    nelsonRef: 'Contest Enrichment — Right Triangle Altitude Geometric Mean (h² = pq)',
+    promptText:
+      'An altitude drawn to the hypotenuse splits a right triangle into two similar right triangles △ABC ~ △DEF with shared segments AB = ' +
+      p +
+      ' cm, BC = h, DE = h, EF = ' +
+      q +
+      ' cm. Find the exact altitude h (in cm):',
+    equationLatex: `\\triangle ABC \\sim \\triangle DEF \\implies \\frac{AB}{DE} = \\frac{BC}{EF} \\implies \\frac{${p}}{h} = \\frac{h}{${q}}`,
+    expectedValue: h,
+    exactExpectedLatex: String(h),
+    diagram: {
+      type: 'similar',
+      t1: { A: 'θ', B: '90°', C: '', ab: `${p}cm`, bc: 'h', ca: '' },
+      t2: { D: 'θ', E: '90°', F: '', de: 'h', ef: `${q}cm`, fd: '' },
+    },
+    hints: [
+      'Cross-multiply the proportion from the two similar right triangles: p / h = h / q.',
+      `Solve h² = ${p} × ${q} = ${p * q}, then take √${p * q}.`,
+    ],
+    solutionSteps: [
+      `\\frac{${p}}{h} = \\frac{h}{${q}} \\implies h^2 = (${p})(${q}) = ${p * q}`,
+      `h = \\sqrt{${p * q}} = ${h}\\text{ cm}`,
+    ],
+  };
+}
+
 let trigCounter = 0;
 
 function generateTrigProblem(skill = 'sine', level = 1) {
@@ -7188,7 +7445,7 @@ function checkTrigAnswer(inputRaw, problem) {
 
   s = s
     .replace(/\u2212/g, '-')
-    .replace(/°|\bdegrees?\b|\bdeg\b|\bcm\b|\bkm\b|\bm\b/gi, '')
+    .replace(/°|\bdegrees?\b|\bdeg\b|cm²|cm\^2|m²|m\^2|\bcm\b|\bkm\b|\bm\b/gi, '')
     .replace(/^[a-zA-Zθ]+\s*=\s*/, '')
     .trim();
 
@@ -7197,15 +7454,16 @@ function checkTrigAnswer(inputRaw, problem) {
     const diff = Math.abs(val - problem.expectedValue);
     // Allow 0.55 tolerance for nearest-degree or 1 d.p. trig rounding
     const tol = problem.unit === '°' ? 0.55 : 0.16;
+    const unitSuffix = problem.unit ? ` ${problem.unit}` : '';
     if (diff <= tol) {
       return {
         correct: true,
-        message: `Correct! Exact ≈ ${problem.expectedValue.toFixed(1)} ${problem.unit}.`,
+        message: `Correct! Exact ≈ ${problem.expectedValue.toFixed(1)}${unitSuffix}.`,
       };
     }
     return {
       correct: false,
-      message: `Not quite (expected ≈ ${problem.expectedValue.toFixed(1)} ${problem.unit} — make sure your calculator is in DEGREE mode!).`,
+      message: `Not quite (expected ≈ ${problem.expectedValue.toFixed(1)}${unitSuffix} — make sure your calculator is in DEGREE mode!).`,
     };
   } catch {
     return { correct: false, parseError: true, message: 'Could not read that number. Enter e.g. 14.3' };
